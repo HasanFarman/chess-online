@@ -87,8 +87,8 @@ class ChessWidget(QWidget):
 
     def _to_board(self, px: int, py: int) -> tuple[int, int]:
         """Convert pixel (px,py) → board (col,row)."""
-        col = px // CELL
-        row = py // CELL
+        col = int(px // CELL)
+        row = int(py // CELL)
         if self.flipped:
             col = 7 - col
             row = 7 - row
