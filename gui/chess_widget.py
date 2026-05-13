@@ -9,9 +9,9 @@ import os
 import sys
 
 from PyQt6.QtWidgets import QWidget, QDialog, QVBoxLayout, QPushButton, QLabel
-from PyQt6.QtCore import Qt, QRect, QPoint, pyqtSignal
+from PyQt6.QtCore import Qt, QRect, QPoint, QSize, pyqtSignal
 from PyQt6.QtGui import (
-    QPainter, QColor, QPixmap, QFont, QPen, QBrush
+    QPainter, QColor, QPixmap, QFont, QPen, QBrush, QIcon
 )
 
 from game import Game
@@ -276,12 +276,15 @@ class ChessWidget(QWidget):
 
         from_x, from_y = ap.x, ap.y
         promotion_choice = "queen"
+        is_promotion = False
 
-        # Check if pawn promotion is required
+        # Only ask for promotion when the move is actually legal,
+        # to avoid popping the dialog for blocked / illegal drops.
         if isinstance(ap, Pawn):
             end_row = 0 if ap.is_white else 7
-            if to_y == end_row:
+            if to_y == end_row and ap.has_move_to(to_x, to_y):
                 promotion_choice = self._ask_promotion(ap.is_white)
+                is_promotion = True
 
         self._drag_pos = None
         self.game.dragging = False
@@ -289,7 +292,7 @@ class ChessWidget(QWidget):
         success = self.game.try_move(to_x, to_y, promotion_choice)
         if success:
             move = Move(from_x, from_y, to_x, to_y,
-                        promotion=promotion_choice if isinstance(ap, Pawn) else None)
+                        promotion=promotion_choice if is_promotion else None)
             self.move_made.emit(move)
         self.update()
 
@@ -305,6 +308,10 @@ class ChessWidget(QWidget):
 
 class PromotionDialog(QDialog):
     """Modal dialog for pawn promotion piece selection."""
+
+    # Maps a promotion choice to the single-letter suffix used in image keys
+    # (e.g. "knight" -> "n" so we load "wn"/"bn", not "wk"/"bk").
+    _IMAGE_SUFFIX = {"queen": "q", "rook": "r", "knight": "n", "bishop": "b"}
 
     def __init__(self, is_white: bool, images: dict[str, QPixmap],
                  parent: QWidget | None = None) -> None:
@@ -330,15 +337,12 @@ class PromotionDialog(QDialog):
                    ("knight", "Knight"), ("bishop", "Bishop")]
 
         for key, name in options:
-            btn = QPushButton()
+            btn = QPushButton(f"  {name}")
             btn.setFixedHeight(60)
-            img = images.get(prefix + key[0])
-            if img:
-                btn.setIcon(img.toImage().__class__(img.toImage()))
-                from PyQt6.QtGui import QIcon
+            img = images.get(prefix + self._IMAGE_SUFFIX[key])
+            if img is not None:
                 btn.setIcon(QIcon(img))
-                btn.setIconSize(img.size())
-            btn.setText(f"  {name}")
+                btn.setIconSize(QSize(40, 40))
             btn.setStyleSheet("""
                 QPushButton {
                     background:#0f3460; color:white; border-radius:6px;

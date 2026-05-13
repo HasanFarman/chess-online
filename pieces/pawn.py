@@ -22,14 +22,14 @@ class Pawn(Piece):
         direction = -1 if self.is_white else 1   # white moves up (y-1), black down (y+1)
 
         # --- En-passant check ---
-        if 0 < self.x < 7:
-            for dx in (1, -1):
-                neighbor = board.get_piece(self.x + dx, self.y)
-                if (isinstance(neighbor, Pawn) and
-                        neighbor.is_white != self.is_white and
-                        neighbor.moved_two_squares):
-                    if x == self.x + dx and y == self.y + direction:
-                        return True
+        # board.get_piece handles out-of-bounds, so a/h-file pawns work too.
+        for dx in (1, -1):
+            neighbor = board.get_piece(self.x + dx, self.y)
+            if (isinstance(neighbor, Pawn) and
+                    neighbor.is_white != self.is_white and
+                    neighbor.moved_two_squares):
+                if x == self.x + dx and y == self.y + direction:
+                    return True
 
         # Cannot land on own piece
         target = board.get_piece(x, y)

@@ -69,14 +69,19 @@ class King(Piece):
         if not self.has_move_to(to_x, to_y):
             return False
 
-        rook = self._get_rook(to_x, board)
+        # A move is castling only when the king travels exactly two squares
+        # horizontally and has never moved before. Without this guard, a normal
+        # one-square king move would also drag the rook across the board.
+        is_castling = (not self.has_moved
+                       and to_y == self.y
+                       and abs(to_x - self.x) == 2)
+        rook = self._get_rook(to_x, board) if is_castling else None
+
         board.update_pieces(self.x, self.y, to_x, to_y, self, all_pieces)
-        old_x = self.x
         self.x = to_x
         self.y = to_y
 
-        # Move rook if castling
-        if rook is not None and not self.has_moved and not rook.has_moved:
+        if is_castling and rook is not None and not rook.has_moved:
             rook.castle_done(to_x, board, all_pieces)
 
         self.has_moved = True

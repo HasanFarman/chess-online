@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"from PyQt6.QtGui import QPushButton\")"
+    ]
+  }
+}
