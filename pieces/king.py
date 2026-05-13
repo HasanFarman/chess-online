@@ -28,8 +28,8 @@ class King(Piece):
                 return True
             return False
 
-        # Castling
-        if self.has_moved:
+        # Castling — must be on the same rank, unmoved, two squares horizontally
+        if self.has_moved or y != self.y or dx != 2:
             return False
 
         em = enemy_moves or []
